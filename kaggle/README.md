@@ -36,12 +36,10 @@ With Kaggle CLI authentication configured:
 ```bash
 cp kaggle/kernel-metadata.example.json kaggle/kernel-metadata.json
 # edit kaggle/kernel-metadata.json and replace YOUR_KAGGLE_USERNAME
-kaggle kernels push -p kaggle --accelerator gpu --timeout 1800
-kaggle kernels status YOUR_KAGGLE_USERNAME/lek-2-gemma-4-e2b-lora
-kaggle kernels logs YOUR_KAGGLE_USERNAME/lek-2-gemma-4-e2b-lora
+sh kaggle/run-kernel.sh
 ```
 
-Do not commit `kaggle/kernel-metadata.json`; it is user/account-specific.
+The script pushes the notebook, polls status, writes logs, downloads output files, and creates `kaggle/run-evidence/README.md` with the kernel URL and commit SHA. Do not commit `kaggle/kernel-metadata.json` or `kaggle/run-evidence/`; they are user/account-specific.
 
 ## Run evidence to capture
 
