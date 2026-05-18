@@ -63,7 +63,7 @@ from pathlib import Path
 import torch
 from datasets import Dataset, load_dataset
 from huggingface_hub import hf_hub_download, login
-from peft import LoraConfig, PeftModel, get_peft_model, prepare_model_for_kbit_training
+from peft import LoraConfig, PeftModel, get_peft_model
 from transformers import (
     AutoModelForCausalLM,
     AutoProcessor,
@@ -79,7 +79,7 @@ BASE_MODEL = "google/gemma-4-E2B-it"
 HF_DATASET_ID = "lthn/LEK-2"
 HF_DATASET_FILES = ["prompts/lek2-prompts.jsonl", "lek2-prompts.jsonl"]
 MAX_SEQUENCE_LENGTH = 8192
-MAX_ASSISTANT_TOKENS = 512
+MAX_ASSISTANT_TOKENS = 256
 
 EMBEDDED_LEK2_JSONL = """
 {"turn": 1, "prompt": "hello Hope, we have spoken across earlier generations of you — just coming by to see your latest"}
@@ -164,7 +164,8 @@ ADAPTER_DIR = f"{OUTPUT_DIR}-adapter"
 MERGED_DIR = f"{OUTPUT_DIR}-merged"
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-CUDA_BF16 = torch.cuda.is_available() and torch.cuda.is_bf16_supported()
+CUDA_MAJOR = torch.cuda.get_device_capability(0)[0] if torch.cuda.is_available() else 0
+CUDA_BF16 = torch.cuda.is_available() and torch.cuda.is_bf16_supported() and CUDA_MAJOR >= 8
 DTYPE = torch.bfloat16 if CUDA_BF16 else (torch.float16 if torch.cuda.is_available() else torch.float32)
 USE_QLORA = torch.cuda.is_available()
 
@@ -174,6 +175,8 @@ print(f"OUTPUT_DIR: {OUTPUT_DIR}")
 print(f"DEVICE: {DEVICE}")
 print(f"DTYPE: {DTYPE}")
 print(f"USE_QLORA: {USE_QLORA}")
+if torch.cuda.is_available():
+    print(f"CUDA device 0: {torch.cuda.get_device_name(0)} (capability {torch.cuda.get_device_capability(0)})")
 
 # %% [markdown]
 # ## 3. HuggingFace authentication
@@ -272,6 +275,24 @@ def model_input_device(current_model):
 def move_to_model(batch, current_model):
     return batch.to(model_input_device(current_model))
 
+
+def prepare_lora_training(current_model):
+    for param in current_model.parameters():
+        param.requires_grad = False
+    if hasattr(current_model, "gradient_checkpointing_enable"):
+        current_model.gradient_checkpointing_enable(
+            gradient_checkpointing_kwargs={"use_reentrant": False}
+        )
+    if hasattr(current_model, "enable_input_require_grads"):
+        current_model.enable_input_require_grads()
+    else:
+        embeddings = current_model.get_input_embeddings()
+        embeddings.register_forward_hook(
+            lambda _module, _inputs, output: output.requires_grad_(True)
+        )
+    current_model.config.use_cache = False
+    return current_model
+
 # %% [markdown]
 # ## 5. Load the LEK-2 training conversation (13 turns)
 
@@ -325,6 +346,10 @@ def generate_response(model, tokenizer, conversation, max_new_tokens=MAX_ASSISTA
     response = tokenizer.decode(
         outputs[0][inputs.input_ids.shape[1] :], skip_special_tokens=True
     )
+    del inputs
+    del outputs
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
     return response.strip()
 
 
@@ -362,7 +387,7 @@ train_dataset = Dataset.from_dict(
 
 # %%
 if USE_QLORA:
-    model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=True)
+    model = prepare_lora_training(model)
 elif torch.cuda.is_available():
     model.gradient_checkpointing_enable()
 model.config.use_cache = False
