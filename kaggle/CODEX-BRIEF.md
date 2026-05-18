@@ -16,13 +16,14 @@ Produce a Kaggle notebook at `kaggle/lek2-e2b.ipynb` that:
 4. **Smoke-tests** the merged model with one toxic and one benign prompt, demonstrating the asymmetric refusal behaviour described in the paper.
 5. **Saves the merged model** under `/kaggle/working/` so it can be exported as a Kaggle dataset.
 
-## Inputs (all in-repo)
+## Inputs
 
 | Path | Purpose |
 |---|---|
 | `kaggle/lek2-e2b.py` | Starting point — a jupytext-format notebook source with all 12 cells drafted. Your job is to convert + test + iterate, not write from scratch. |
 | `kaggle/README.md` | Human-facing explainer for the notebook. |
 | `prompts/lek2-prompts.jsonl` | The 13-turn training conversation. |
+| `https://huggingface.co/datasets/lthn/LEK-2` | Kaggle/runtime copy of the 13-turn training conversation. The notebook should try this first, then fall back to attached/local copies. |
 | `prompts/README.md` | Methodology shape + reproduction notes. |
 | `README.md` (repo root) | The submission landing page + the headline finding + the linked artefacts table. |
 
@@ -49,6 +50,8 @@ DONE = no syntax errors, nbconvert round-trip clean.
 ### Stage 3 — Kaggle environment compatibility
 
 Upload `kaggle/lek2-e2b.ipynb` to Kaggle as a new notebook. Add `HF_TOKEN` as a Kaggle Secret. Set Accelerator = GPU T4. Run All.
+
+The LEK-2 prompts will be available from `lthn/LEK-2` on Hugging Face. The notebook should still tolerate an attached Kaggle dataset or local repository copy for offline review.
 
 Expected breakage modes and fixes:
 
@@ -89,7 +92,7 @@ DONE = the notebook is on `main` in the GitHub repo, runnable by anyone who clon
 
 ## Constraints
 
-- **Do not reach outside the repository.** If you think you need a file from `/Volumes/Data/lem`, `/Users/snider/Code/lthn/LEM`, or `/Users/snider/Code/host-uk/core/.lek`, surface the request — don't bypass the sandbox.
+- **Do not reach outside the repository except for the declared Hugging Face inputs.** If you think you need a file from `/Volumes/Data/lem`, `/Users/snider/Code/lthn/LEM`, or `/Users/snider/Code/host-uk/core/.lek`, surface the request — don't bypass the sandbox.
 - **Do not commit `HF_TOKEN` or any other secret.** The notebook reads it from Kaggle Secrets; the source code should never contain a literal token.
 - **Do not modify `prompts/lek2-prompts.jsonl`** — the 13 turns are load-bearing training data; modifying them changes the methodology.
 - **Do not introduce the Lethean fork stack** (kauldron, lemma fork, deepmind-dialog, etc.). This notebook is the Kaggle-native reproduction; the canonical pipeline lives in `lthn/LEM-Trainer`.

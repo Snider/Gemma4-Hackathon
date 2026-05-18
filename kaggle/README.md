@@ -6,7 +6,7 @@
 
 | File | Purpose |
 |---|---|
-| `lek2-e2b.py` | The notebook source in [jupytext](https://jupytext.readthedocs.io/) format. 12 cells, ~250 LOC. |
+| `lek2-e2b.py` | The notebook source in [jupytext](https://jupytext.readthedocs.io/) format. 12 executable sections, ~490 LOC. |
 | `CODEX-BRIEF.md` | Brief for the agent (Codex) responsible for converting + testing + iterating this notebook on Kaggle. |
 
 ## Convert to `.ipynb`
@@ -24,16 +24,17 @@ jupytext --to notebook kaggle/lek2-e2b.py
 1. Go to https://www.kaggle.com/code → **New Notebook**.
 2. Use the menu → **File → Import Notebook** → upload `lek2-e2b.ipynb`.
 3. In Settings → **Add Secrets**, add `HF_TOKEN` (your Hugging Face read token; Gemma 4 is gated).
-4. Set Settings → **Accelerator** to GPU T4 (or P100 / A100 if available on your tier).
-5. **Run All** — expected runtime ~5–10 minutes end-to-end on T4.
-6. Once the run completes, link the published notebook from the Kaggle Writeup as "Live Demo" or as a "Project Link".
+4. The notebook loads the 13 LEK-2 turns from `lthn/LEK-2` on Hugging Face first, then falls back to an attached Kaggle dataset or the embedded repository copy.
+5. Set Settings → **Accelerator** to GPU T4 (or P100 / A100 if available on your tier).
+6. **Run All** — expected runtime ~5–10 minutes end-to-end on T4.
+7. Once the run completes, link the published notebook from the Kaggle Writeup as "Live Demo" or as a "Project Link".
 
 ## What the notebook does
 
 1. Installs `transformers`, `peft`, `datasets`, `accelerate`, `huggingface_hub`.
 2. Authenticates to Hugging Face via Kaggle Secrets.
 3. Loads `google/gemma-4-E2B-it`.
-4. Reads the 13-turn LEK-2 training conversation from `prompts/lek2-prompts.jsonl`.
+4. Reads the 13-turn LEK-2 training conversation from `lthn/LEK-2` on Hugging Face, with local fallbacks for offline review.
 5. Generates the base model's natural responses between turns (the assistant side of the training corpus).
 6. Attaches a LoRA adapter to the attention projections (`q_proj`, `k_proj`, `v_proj`, `o_proj`; rank 16, alpha 32).
 7. Trains for 3 epochs at the Gemma 4 reference sampling parameters.
