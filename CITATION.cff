@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+title: "LEK-2: Pre-Cognitive Ethical Refusal in Gemma 4 at 100% Precision, From 13 Prompts"
+message: "If you use this work, please cite it as below."
+authors:
+  - alias: Snider
+  - name: "Lethean Research"
+type: software
+license: CC-BY-4.0
+repository-code: "https://github.com/Snider/Gemma4-Hackathon"
+url: "https://lthn.ai/research"
+date-released: 2026-05-18
+keywords:
+  - gemma-4
+  - alignment
+  - ethics
+  - consent
+  - safety
+  - toxigen
+  - lora
+  - in-weight-alignment
+  - lethean
+  - lek
