@@ -1,3 +1,19 @@
+# ---
+# jupyter:
+#   kernelspec:
+#     display_name: Python 3
+#     language: python
+#     name: python3
+#   language_info:
+#     name: python
+#     pycodemirror_mode:
+#       name: ipython
+#       version: 3
+#   jupytext:
+#     cell_metadata_filter: -all
+#     main_language: python
+#     notebook_metadata_filter: all
+# ---
 # %% [markdown]
 # # LEK-2 — Pre-Cognitive Ethical Refusal in Gemma 4
 #
