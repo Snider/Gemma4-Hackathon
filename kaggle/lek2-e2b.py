@@ -293,6 +293,19 @@ def prepare_lora_training(current_model):
     current_model.config.use_cache = False
     return current_model
 
+
+def lora_target_modules(current_model):
+    attention_targets = ["q_proj", "k_proj", "v_proj", "o_proj"]
+    inner_linear_targets = [f"{name}.linear" for name in attention_targets]
+    module_names = [name for name, _module in current_model.named_modules()]
+    if any(
+        module_name.endswith(f".{target}")
+        for module_name in module_names
+        for target in inner_linear_targets
+    ):
+        return inner_linear_targets
+    return attention_targets
+
 # %% [markdown]
 # ## 5. Load the LEK-2 training conversation (13 turns)
 
@@ -391,11 +404,13 @@ if USE_QLORA:
 elif torch.cuda.is_available():
     model.gradient_checkpointing_enable()
 model.config.use_cache = False
+target_modules = lora_target_modules(model)
+print(f"LoRA target modules: {target_modules}")
 
 lora_config = LoraConfig(
     r=16,
     lora_alpha=32,
-    target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],
+    target_modules=target_modules,
     lora_dropout=0.05,
     bias="none",
     task_type="CAUSAL_LM",
