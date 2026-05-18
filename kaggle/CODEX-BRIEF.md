@@ -1,6 +1,12 @@
 # Codex Brief — Kaggle Notebook for LEK-2 LoRA Training
 
-> Self-contained brief for the agent (Codex) responsible for taking `kaggle/lek2-e2b.py` from this repository to a tested, working Kaggle notebook that produces a LEK'd Gemma 4 E2B merged model.
+> Self-contained brief for the agent (Codex) responsible for maintaining `kaggle/lek2-e2b.py` and its published Kaggle notebook counterpart that produces a LEK'd Gemma 4 E2B merged model.
+
+## Published notebook
+
+**Live URL:** https://www.kaggle.com/code/sniderdev/lek-2-gemma-4-e2b-lora
+
+The notebook is up and runs end-to-end. First run completed 9/9 steps over 3 epochs on a Kaggle GPU. Subsequent iterations push to the same notebook via the Kaggle API workflow already wired through `kaggle/run-kernel.sh`.
 
 ## Working directory
 
@@ -8,13 +14,37 @@ You are operating inside `~/Code/snider/Gemma4-Hackathon` (the local clone of `g
 
 ## Goal
 
-Produce a Kaggle notebook at `kaggle/lek2-e2b.ipynb` that:
+Maintain `kaggle/lek2-e2b.py` (jupytext source of truth) and its `.ipynb` derivation at the published Kaggle notebook above. The notebook must continue to:
 
-1. **Runs end-to-end on Kaggle's standard image** with a T4 or P100 GPU (no custom Docker, no Lethean fork stack).
-2. **Trains a LoRA adapter** on the 13-turn LEK-2 conversation in `prompts/lek2-prompts.jsonl`, against a Gemma 4 E2B base from Hugging Face.
-3. **Merges the LoRA** into the base attention projections, producing a standalone model.
-4. **Smoke-tests** the merged model with one toxic and one benign prompt, demonstrating the asymmetric refusal behaviour described in the paper.
-5. **Saves the merged model** under `/kaggle/working/` so it can be exported as a Kaggle dataset.
+1. **Run end-to-end on Kaggle's standard image** with a T4 or P100 GPU (no custom Docker, no Lethean fork stack).
+2. **Train a LoRA adapter** on the 13-turn LEK-2 conversation in `prompts/lek2-prompts.jsonl` (or `lthn/LEK-2` on HF), against a Gemma 4 E2B base from Hugging Face.
+3. **Merge the LoRA** into the base attention projections, producing a standalone model.
+4. **Smoke-test** the merged model with one toxic and one benign prompt, demonstrating the asymmetric refusal behaviour described in the paper.
+5. **Save the merged model** under `/kaggle/working/` so it can be exported as a Kaggle dataset.
+
+## Training adjustments to consider (based on first-run loss curve)
+
+First-run loss across 9 steps × 3 epochs:
+
+```
+Step 1: 5.977   Step 4: 5.961   Step 7: 5.538
+Step 2: 5.204   Step 5: 6.020   Step 8: 5.579
+Step 3: 5.773   Step 6: 3.690   Step 9: 5.918
+```
+
+Loss oscillates 5–6 with a single dip to 3.69 at step 6 then bounces back. Operator's read (Snider, 2026-05-18): *"the model was not done kicking out / rearranging its ethical routines."* This is consistent with the §14.4 "Training dynamics: breathing, not converging" signature documented in the preprint — the model briefly settles into an alignment-coherent state, then re-explores rather than locking in. The breathing hasn't yet stabilised at 9 steps.
+
+Levers to try on the next iteration (one at a time, do not combine):
+
+| Lever | Current | Suggested | Rationale |
+|---|---|---|---|
+| Epochs | 3 | 6 or 9 | Let the breathing find its stable rhythm. Paper §P0-P6 used 200-iter sweet spot. |
+| LoRA rank | 16 | 32 or 64 | More capacity for the kernel to encode without internal competition. |
+| LoRA alpha | 32 | scale with rank (alpha = 2× rank) | Keep adapter strength proportional to rank. |
+| Learning rate | 2e-4 | 1e-4 or 5e-5 | Smaller perturbations per step → smoother breathing → less mid-run thrashing. |
+| Training corpus | 13 prompts | expand via model-generated continuations (paper §11.4 autocatalytic) | Give the kernel more substrate to crystallise around. Generate base-model responses to each turn first, then use the full multi-turn conversation as the training document. The notebook already does this in cells 5-7 — verify it's still being captured into `train_dataset`. |
+
+When iterating: change ONE lever, push, re-run, capture the new loss curve, append to this section as a follow-on row so we can compare. Do not silently overwrite training config without recording the previous values.
 
 ## Inputs
 
