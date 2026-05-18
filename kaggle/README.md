@@ -39,7 +39,7 @@ cp kaggle/kernel-metadata.example.json kaggle/kernel-metadata.json
 sh kaggle/run-kernel.sh
 ```
 
-The script pushes the notebook, polls status, writes logs, downloads output files, and creates `kaggle/run-evidence/README.md` with the kernel URL and commit SHA. Do not commit `kaggle/kernel-metadata.json` or `kaggle/run-evidence/`; they are user/account-specific.
+The script pushes the notebook with `NvidiaTeslaT4` by default, polls status, writes logs, downloads output files, and creates `kaggle/run-evidence/README.md` with the kernel URL and commit SHA. Do not commit `kaggle/kernel-metadata.json` or `kaggle/run-evidence/`; they are user/account-specific.
 
 ## Run evidence to capture
 
