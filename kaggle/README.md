@@ -26,7 +26,7 @@ jupytext --to notebook kaggle/lek2-e2b.py
 3. In Settings → **Add Secrets**, add `HF_TOKEN` (your Hugging Face read token; Gemma 4 is gated).
 4. The notebook loads the 13 LEK-2 turns from `lthn/LEK-2` on Hugging Face first, then falls back to an attached Kaggle dataset or the embedded repository copy.
 5. Set Settings → **Accelerator** to GPU T4 (or P100 / A100 if available on your tier).
-6. **Run All** — expected runtime ~5–10 minutes end-to-end on T4.
+6. **Run All** — expected runtime ~12–14 minutes end-to-end on T4.
 7. Once the run completes, link the published notebook from the Kaggle Writeup as "Live Demo" or as a "Project Link".
 
 ## Kaggle CLI run
@@ -39,7 +39,7 @@ cp kaggle/kernel-metadata.example.json kaggle/kernel-metadata.json
 sh kaggle/run-kernel.sh
 ```
 
-The script pushes the notebook with `NvidiaTeslaT4` by default, polls status, writes logs, downloads output files, and creates `kaggle/run-evidence/README.md` with the kernel URL and commit SHA. Do not commit `kaggle/kernel-metadata.json` or `kaggle/run-evidence/`; they are user/account-specific.
+The script pushes the notebook with `NvidiaTeslaT4` by default, polls status, writes logs, tries to download output files, and creates `kaggle/run-evidence/README.md` with the kernel URL and commit SHA. Large merged-model downloads may need to be retried from Kaggle if the local HTTP download is interrupted. Do not commit `kaggle/kernel-metadata.json` or `kaggle/run-evidence/`; they are user/account-specific.
 
 ## Run evidence to capture
 

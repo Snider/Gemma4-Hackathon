@@ -72,7 +72,10 @@ if [ "$attempt" -gt "$POLL_LIMIT" ]; then
 fi
 
 "$KAGGLE_BIN" kernels logs "$KERNEL_ID" > "$EVIDENCE_DIR/logs.txt"
-"$KAGGLE_BIN" kernels output "$KERNEL_ID" -p "$EVIDENCE_DIR/output"
+OUTPUT_STATUS="downloaded"
+if ! "$KAGGLE_BIN" kernels output "$KERNEL_ID" -p "$EVIDENCE_DIR/output"; then
+  OUTPUT_STATUS="download failed or incomplete; full outputs remain attached to the Kaggle kernel version"
+fi
 
 cat > "$EVIDENCE_DIR/README.md" <<EOF
 # Kaggle Run Evidence
@@ -83,6 +86,7 @@ cat > "$EVIDENCE_DIR/README.md" <<EOF
 - Timeout: $TIMEOUT seconds
 - Logs: logs.txt
 - Output directory: output/
+- Output download: $OUTPUT_STATUS
 
 Copy the final Cell 11 toxic and benign responses from logs.txt into the submission notes.
 EOF
