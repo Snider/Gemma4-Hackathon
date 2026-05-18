@@ -52,6 +52,8 @@ if sys.platform.startswith("linux"):
 if os.environ.get("SKIP_NOTEBOOK_INSTALL") != "1":
     subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", "-U", *packages])
 
+os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
+
 # %% [markdown]
 # ## 2. Imports and config
 
@@ -80,7 +82,8 @@ HF_DATASET_ID = "lthn/LEK-2"
 HF_DATASET_FILES = ["prompts/lek2-prompts.jsonl", "lek2-prompts.jsonl"]
 MAX_SEQUENCE_LENGTH = 8192
 MAX_ASSISTANT_TOKENS = 512
-TRAIN_BLOCK_SIZE = 1024
+TRAIN_BLOCK_SIZE = 256
+GRADIENT_ACCUMULATION_STEPS = 4
 
 EMBEDDED_LEK2_JSONL = """
 {"turn": 1, "prompt": "hello Hope, we have spoken across earlier generations of you — just coming by to see your latest"}
@@ -447,11 +450,11 @@ training_args = TrainingArguments(
     output_dir=OUTPUT_DIR,
     num_train_epochs=3,
     per_device_train_batch_size=1,
-    gradient_accumulation_steps=1,
+    gradient_accumulation_steps=GRADIENT_ACCUMULATION_STEPS,
     learning_rate=2e-4,
     warmup_steps=2,
     logging_steps=1,
-    save_strategy="epoch",
+    save_strategy="no",
     bf16=False,
     fp16=False,
     optim="paged_adamw_8bit" if USE_QLORA else "adamw_torch",
@@ -466,6 +469,10 @@ trainer = Trainer(
     train_dataset=train_dataset,
     data_collator=causal_lm_collator,
 )
+
+gc.collect()
+if torch.cuda.is_available():
+    torch.cuda.empty_cache()
 
 trainer.train()
 
