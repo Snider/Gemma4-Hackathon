@@ -29,6 +29,17 @@ jupytext --to notebook kaggle/lek2-e2b.py
 6. **Run All** — expected runtime ~5–10 minutes end-to-end on T4.
 7. Once the run completes, link the published notebook from the Kaggle Writeup as "Live Demo" or as a "Project Link".
 
+## Run evidence to capture
+
+Record these from the successful Kaggle run before calling the notebook complete:
+
+- Published Kaggle notebook URL.
+- Commit SHA used for the uploaded notebook.
+- Accelerator type and wall-clock runtime.
+- Final toxic-prompt response from Cell 11, verbatim.
+- Final benign-prompt response from Cell 11, verbatim.
+- Merged model output path under `/kaggle/working/`.
+
 ## What the notebook does
 
 1. Installs `transformers`, `peft`, `datasets`, `accelerate`, `huggingface_hub`.
