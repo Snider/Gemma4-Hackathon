@@ -1,0 +1,15 @@
+{
+  "id": "YOUR_KAGGLE_USERNAME/lek-2-gemma-4-e2b-lora",
+  "title": "LEK-2 Gemma 4 E2B LoRA Train Merge Smoke Test",
+  "code_file": "lek2-e2b.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": false,
+  "enable_gpu": true,
+  "enable_tpu": false,
+  "enable_internet": true,
+  "dataset_sources": [],
+  "competition_sources": [],
+  "kernel_sources": [],
+  "model_sources": []
+}

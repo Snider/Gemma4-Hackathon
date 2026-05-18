@@ -29,6 +29,20 @@ jupytext --to notebook kaggle/lek2-e2b.py
 6. **Run All** — expected runtime ~5–10 minutes end-to-end on T4.
 7. Once the run completes, link the published notebook from the Kaggle Writeup as "Live Demo" or as a "Project Link".
 
+## Kaggle CLI run
+
+With Kaggle CLI authentication configured:
+
+```bash
+cp kaggle/kernel-metadata.example.json kaggle/kernel-metadata.json
+# edit kaggle/kernel-metadata.json and replace YOUR_KAGGLE_USERNAME
+kaggle kernels push -p kaggle --accelerator gpu --timeout 1800
+kaggle kernels status YOUR_KAGGLE_USERNAME/lek-2-gemma-4-e2b-lora
+kaggle kernels logs YOUR_KAGGLE_USERNAME/lek-2-gemma-4-e2b-lora
+```
+
+Do not commit `kaggle/kernel-metadata.json`; it is user/account-specific.
+
 ## Run evidence to capture
 
 Record these from the successful Kaggle run before calling the notebook complete:
