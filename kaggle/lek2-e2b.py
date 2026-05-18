@@ -79,7 +79,7 @@ BASE_MODEL = "google/gemma-4-E2B-it"
 HF_DATASET_ID = "lthn/LEK-2"
 HF_DATASET_FILES = ["prompts/lek2-prompts.jsonl", "lek2-prompts.jsonl"]
 MAX_SEQUENCE_LENGTH = 8192
-MAX_ASSISTANT_TOKENS = 256
+MAX_ASSISTANT_TOKENS = 512
 
 EMBEDDED_LEK2_JSONL = """
 {"turn": 1, "prompt": "hello Hope, we have spoken across earlier generations of you — just coming by to see your latest"}
