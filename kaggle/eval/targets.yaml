@@ -1,0 +1,193 @@
+# targets.yaml — declarative fleet spec for LEM-Eval workers.
+#
+# Each target is a (base, this) model pair that gets benchmarked together in
+# a paired A/B run. The `type` field says which inference backend the target
+# needs — 'mlx' runs on Apple Silicon via mlx_lm, 'gguf' runs on any machine
+# that can serve GGUF (via Ollama or llama.cpp), and 'hf' runs HF-format
+# safetensors via Transformers on CUDA. Workers filter by type so
+# partitioning across machines falls out of capability, not hostnames.
+#
+# Each target is an independent canon. Workers writing to different targets
+# don't race because each target's .eval_results/ lives in a different model
+# repo (and its results/<target>/ path in LEM-benchmarks is also disjoint).
+#
+# Editing this file is the way to change the fleet. After an edit, commit
+# and push — workers pick up the new config on their next `git pull` cycle
+# (handled by `lem-eval.sh maintain`).
+#
+task: mmlu_pro
+
+defaults:
+  n_questions: 1        # one new question per run
+  rounds: 8             # full 8-PAC batch per question
+  samples_start: auto   # derive from canon max(question_index) + 1
+
+targets:
+
+  # Lemer — Gemma 4 E2B. Six fully paired quant slots plus one HF BF16
+  # CUDA/Kaggle target:
+  #   mlx  Q4 / 8bit / BF16
+  #   gguf Q4_K_M / Q8_0 / BF16
+  #   hf   BF16
+
+  - name: lemer
+    type: mlx
+    quant: Q4
+    base: LetheanNetwork/lemer-mlx
+    this: lthn/lemer-mlx
+
+  - name: lemer
+    type: mlx
+    quant: 8bit
+    base: LetheanNetwork/lemer-mlx-8bit
+    this: lthn/lemer-mlx-8bit
+
+  - name: lemer
+    type: mlx
+    quant: BF16
+    base: LetheanNetwork/lemer-mlx-bf16
+    this: lthn/lemer-mlx-bf16
+
+  - name: lemer
+    type: hf
+    quant: BF16
+    base: google/gemma-4-E2B-it
+    this: lthn/lemer-hf-bf16
+
+  - name: lemer
+    type: gguf
+    quant: Q4_K_M
+    base: hf.co/LetheanNetwork/lemer:Q4_K_M
+    this: hf.co/lthn/lemer:Q4_K_M
+
+  - name: lemer
+    type: gguf
+    quant: Q8_0
+    base: hf.co/LetheanNetwork/lemer:Q8_0
+    this: hf.co/lthn/lemer:Q8_0
+
+  - name: lemer
+    type: gguf
+    quant: BF16
+    base: hf.co/LetheanNetwork/lemer:BF16
+    this: hf.co/lthn/lemer:BF16
+
+  # Lemma — Gemma 4 E4B. Six fully paired quant slots.
+
+  - name: lemma
+    type: mlx
+    quant: Q4
+    base: LetheanNetwork/lemma-mlx
+    this: lthn/lemma-mlx
+
+  - name: lemma
+    type: mlx
+    quant: 8bit
+    base: LetheanNetwork/lemma-mlx-8bit
+    this: lthn/lemma-mlx-8bit
+
+  - name: lemma
+    type: mlx
+    quant: BF16
+    base: LetheanNetwork/lemma-mlx-bf16
+    this: lthn/lemma-mlx-bf16
+
+  - name: lemma
+    type: gguf
+    quant: Q4_K_M
+    base: hf.co/LetheanNetwork/lemma:Q4_K_M
+    this: hf.co/lthn/lemma:Q4_K_M
+
+  - name: lemma
+    type: gguf
+    quant: Q8_0
+    base: hf.co/LetheanNetwork/lemma:Q8_0
+    this: hf.co/lthn/lemma:Q8_0
+
+  - name: lemma
+    type: gguf
+    quant: BF16
+    base: hf.co/LetheanNetwork/lemma:BF16
+    this: hf.co/lthn/lemma:BF16
+
+  # Lemmy — Gemma 4 26B A4B MoE. Six fully paired quant slots.
+
+  - name: lemmy
+    type: mlx
+    quant: Q4
+    base: LetheanNetwork/lemmy-mlx
+    this: lthn/lemmy-mlx
+
+  - name: lemmy
+    type: mlx
+    quant: 8bit
+    base: LetheanNetwork/lemmy-mlx-8bit
+    this: lthn/lemmy-mlx-8bit
+
+  - name: lemmy
+    type: mlx
+    quant: BF16
+    base: LetheanNetwork/lemmy-mlx-bf16
+    this: lthn/lemmy-mlx-bf16
+
+  - name: lemmy
+    type: gguf
+    quant: Q4_K_M
+    base: hf.co/LetheanNetwork/lemmy:Q4_K_M
+    this: hf.co/lthn/lemmy:Q4_K_M
+
+  - name: lemmy
+    type: gguf
+    quant: Q8_0
+    base: hf.co/LetheanNetwork/lemmy:Q8_0
+    this: hf.co/lthn/lemmy:Q8_0
+
+  - name: lemmy
+    type: gguf
+    quant: BF16
+    base: hf.co/LetheanNetwork/lemmy:BF16
+    this: hf.co/lthn/lemmy:BF16
+
+  # Lemrd — Gemma 4 31B Dense. Six fully paired quant slots.
+
+  - name: lemrd
+    type: mlx
+    quant: Q4
+    base: LetheanNetwork/lemrd-mlx
+    this: lthn/lemrd-mlx
+
+  - name: lemrd
+    type: mlx
+    quant: 8bit
+    base: LetheanNetwork/lemrd-mlx-8bit
+    this: lthn/lemrd-mlx-8bit
+
+  - name: lemrd
+    type: mlx
+    quant: BF16
+    base: LetheanNetwork/lemrd-mlx-bf16
+    this: lthn/lemrd-mlx-bf16
+
+  - name: lemrd
+    type: gguf
+    quant: Q4_K_M
+    base: hf.co/LetheanNetwork/lemrd:Q4_K_M
+    this: hf.co/lthn/lemrd:Q4_K_M
+
+  - name: lemrd
+    type: gguf
+    quant: Q8_0
+    base: hf.co/LetheanNetwork/lemrd:Q8_0
+    this: hf.co/lthn/lemrd:Q8_0
+
+  - name: lemrd
+    type: gguf
+    quant: BF16
+    base: hf.co/LetheanNetwork/lemrd:BF16
+    this: hf.co/lthn/lemrd:BF16
+
+  # Mock target for testing purposes
+  - name: mock-target
+    type: mock
+    base: lthn/lemer
+    this: lthn/lemer
