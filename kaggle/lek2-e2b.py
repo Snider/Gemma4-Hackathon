@@ -51,6 +51,7 @@ if sys.platform.startswith("linux"):
 
 if os.environ.get("SKIP_NOTEBOOK_INSTALL") != "1":
     subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", "-U", *packages])
+    subprocess.run([sys.executable, "-m", "pip", "uninstall", "-q", "-y", "torchao"], check=False)
 
 os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
 
