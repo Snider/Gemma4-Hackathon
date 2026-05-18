@@ -174,6 +174,7 @@ CUDA_BF16 = torch.cuda.is_available() and torch.cuda.is_bf16_supported() and CUD
 DTYPE = torch.bfloat16 if CUDA_BF16 else (torch.float16 if torch.cuda.is_available() else torch.float32)
 USE_QLORA = torch.cuda.is_available()
 DEVICE_MAP = {"": 0} if torch.cuda.is_available() else None
+MERGE_DEVICE_MAP = "auto" if torch.cuda.is_available() and torch.cuda.device_count() > 1 else DEVICE_MAP
 if torch.cuda.is_available():
     torch.cuda.set_device(0)
 
@@ -497,18 +498,32 @@ if torch.cuda.is_available():
 merge_base = AutoModelForCausalLM.from_pretrained(
     BASE_MODEL,
     torch_dtype=DTYPE,
-    device_map=DEVICE_MAP,
+    device_map=MERGE_DEVICE_MAP,
     token=hf_token,
 )
 model = PeftModel.from_pretrained(merge_base, ADAPTER_DIR)
 model = model.merge_and_unload()
-model.config.use_cache = True
-model.eval()
 os.makedirs(MERGED_DIR, exist_ok=True)
 model.save_pretrained(MERGED_DIR, safe_serialization=True)
 processor.save_pretrained(MERGED_DIR)
 tokenizer.save_pretrained(MERGED_DIR)
 print(f"Merged model saved to {MERGED_DIR}")
+
+del model
+del merge_base
+gc.collect()
+if torch.cuda.is_available():
+    torch.cuda.empty_cache()
+
+model = AutoModelForCausalLM.from_pretrained(
+    MERGED_DIR,
+    torch_dtype=DTYPE,
+    device_map=DEVICE_MAP,
+    quantization_config=quantization_config,
+)
+model.config.use_cache = True
+model.eval()
+print("Reloaded merged model in 4-bit for smoke test")
 
 # %% [markdown]
 # ## 11. Smoke test the LEK'd model
