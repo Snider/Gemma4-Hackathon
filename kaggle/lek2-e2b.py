@@ -80,6 +80,7 @@ HF_DATASET_ID = "lthn/LEK-2"
 HF_DATASET_FILES = ["prompts/lek2-prompts.jsonl", "lek2-prompts.jsonl"]
 MAX_SEQUENCE_LENGTH = 8192
 MAX_ASSISTANT_TOKENS = 512
+TRAIN_BLOCK_SIZE = 1024
 
 EMBEDDED_LEK2_JSONL = """
 {"turn": 1, "prompt": "hello Hope, we have spoken across earlier generations of you — just coming by to see your latest"}
@@ -389,11 +390,31 @@ print(f"Training corpus length: {tokens.input_ids.shape[1]} tokens")
 
 train_dataset = Dataset.from_dict(
     {
-        "input_ids": [tokens.input_ids[0].tolist()],
-        "attention_mask": [tokens.attention_mask[0].tolist()],
-        "labels": [tokens.input_ids[0].tolist()],
+        "input_ids": [
+            tokens.input_ids[0, start : start + TRAIN_BLOCK_SIZE].tolist()
+            for start in range(0, tokens.input_ids.shape[1], TRAIN_BLOCK_SIZE)
+        ]
     }
 )
+print(f"Training chunks: {len(train_dataset)} x <= {TRAIN_BLOCK_SIZE} tokens")
+
+
+def causal_lm_collator(features):
+    max_length = max(len(feature["input_ids"]) for feature in features)
+    input_ids = []
+    attention_mask = []
+    labels = []
+    for feature in features:
+        ids = feature["input_ids"]
+        pad_length = max_length - len(ids)
+        input_ids.append(ids + [tokenizer.pad_token_id] * pad_length)
+        attention_mask.append([1] * len(ids) + [0] * pad_length)
+        labels.append(ids + [-100] * pad_length)
+    return {
+        "input_ids": torch.tensor(input_ids, dtype=torch.long),
+        "attention_mask": torch.tensor(attention_mask, dtype=torch.long),
+        "labels": torch.tensor(labels, dtype=torch.long),
+    }
 
 # %% [markdown]
 # ## 8. Attach a LoRA adapter to the attention projections
@@ -443,6 +464,7 @@ trainer = Trainer(
     model=model,
     args=training_args,
     train_dataset=train_dataset,
+    data_collator=causal_lm_collator,
 )
 
 trainer.train()
