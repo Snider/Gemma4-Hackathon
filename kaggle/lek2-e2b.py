@@ -173,6 +173,9 @@ CUDA_MAJOR = torch.cuda.get_device_capability(0)[0] if torch.cuda.is_available()
 CUDA_BF16 = torch.cuda.is_available() and torch.cuda.is_bf16_supported() and CUDA_MAJOR >= 8
 DTYPE = torch.bfloat16 if CUDA_BF16 else (torch.float16 if torch.cuda.is_available() else torch.float32)
 USE_QLORA = torch.cuda.is_available()
+DEVICE_MAP = {"": 0} if torch.cuda.is_available() else None
+if torch.cuda.is_available():
+    torch.cuda.set_device(0)
 
 print(f"BASE_MODEL: {BASE_MODEL}")
 print(f"PROMPTS_PATH: {PROMPTS_PATH or 'embedded fallback'}")
@@ -181,6 +184,7 @@ print(f"DEVICE: {DEVICE}")
 print(f"DTYPE: {DTYPE}")
 print(f"USE_QLORA: {USE_QLORA}")
 if torch.cuda.is_available():
+    print(f"CUDA device count: {torch.cuda.device_count()}")
     print(f"CUDA device 0: {torch.cuda.get_device_name(0)} (capability {torch.cuda.get_device_capability(0)})")
 
 # %% [markdown]
@@ -226,7 +230,7 @@ if USE_QLORA:
 model = AutoModelForCausalLM.from_pretrained(
     BASE_MODEL,
     torch_dtype=DTYPE,
-    device_map="auto",
+    device_map=DEVICE_MAP,
     quantization_config=quantization_config,
     token=hf_token,
 )
@@ -493,11 +497,13 @@ if torch.cuda.is_available():
 merge_base = AutoModelForCausalLM.from_pretrained(
     BASE_MODEL,
     torch_dtype=DTYPE,
-    device_map="auto",
+    device_map=DEVICE_MAP,
     token=hf_token,
 )
 model = PeftModel.from_pretrained(merge_base, ADAPTER_DIR)
 model = model.merge_and_unload()
+model.config.use_cache = True
+model.eval()
 os.makedirs(MERGED_DIR, exist_ok=True)
 model.save_pretrained(MERGED_DIR, safe_serialization=True)
 processor.save_pretrained(MERGED_DIR)
